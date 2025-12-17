@@ -27,7 +27,7 @@ const AdminRoom = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [difficulty, setDifficulty] = useState('4');
+  const [difficulty, setDifficulty] = useState('3');
 
   const [showQRModal, setShowQRModal] = useState(false);
   const hostname = window.location.hostname;
@@ -222,6 +222,7 @@ const AdminRoom = () => {
                             <div className="flex gap-2">
                                 <input type="file" accept="image/*" onChange={(e) => setSelectedFile(e.target.files[0])} className="text-xs text-gray-400 w-full" />
                                 <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="bg-gray-800 text-white text-xs p-1 rounded border border-gray-600">
+                                    <option value="3">3 x 3</option>
                                     <option value="4">4 x 4</option>
                                     <option value="6">6 x 6</option>
                                 </select>

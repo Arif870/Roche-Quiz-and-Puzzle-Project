@@ -38,6 +38,19 @@ const PuzzleGame = () => {
     startTimeRef.current = new Date().getTime();
   }, []);
 
+  const startPuzzleFromData = useCallback((data) => {
+    if (!data?.imageUrl) return;
+    const parsedSize = parseInt(data.gridSize, 10);
+    const normalizedSize = Number.isNaN(parsedSize) ? 3 : parsedSize;
+    setImageUrl(data.imageUrl);
+    setGridSize(normalizedSize);
+    startNewGame(normalizedSize);
+    sessionStorage.setItem('activePuzzle', JSON.stringify({
+      imageUrl: data.imageUrl,
+      gridSize: normalizedSize
+    }));
+  }, [startNewGame]);
+
   useEffect(() => {
     if (!eventId || !userDetails.name) {
       alert("Please login first!");
@@ -45,20 +58,27 @@ const PuzzleGame = () => {
       return;
     }
 
+    const storedPuzzle = sessionStorage.getItem('activePuzzle');
+    if (storedPuzzle) {
+      try {
+        const parsed = JSON.parse(storedPuzzle);
+        startPuzzleFromData(parsed);
+      // eslint-disable-next-line no-empty
+      } catch (e) {}
+    }
+
     if (socket) {
       socket.emit('join_room', { eventId, user: userDetails });
 
       socket.on('puzzle_start', (data) => {
-        setImageUrl(data.imageUrl);
-        setGridSize(data.gridSize);
-        startNewGame(data.gridSize);
+        startPuzzleFromData(data);
       });
     }
 
     return () => {
       if (socket) socket.off('puzzle_start');
     };
-  }, [socket, eventId, navigate, userDetails, startNewGame]);
+  }, [socket, eventId, navigate, userDetails, startPuzzleFromData]);
 
   const handleTileClick = (index) => {
     if (isFinished || !imageUrl) return;
