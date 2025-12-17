@@ -51,7 +51,7 @@ const AdminDashboard = () => {
     duration: 10,
     questionTarget: 10,
     groupPlay: true,
-    difficulty: '4x4'
+    difficulty: '3x3'
   });
 
   const [distribution, setDistribution] = useState(DEFAULT_DISTRIBUTION);
@@ -307,12 +307,13 @@ const AdminDashboard = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Puzzle difficulty (4x4 or 6x6)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Puzzle difficulty (default 3x3)</label>
                 <select
                   value={eventForm.difficulty}
                   onChange={(e) => setEventForm({ ...eventForm, difficulty: e.target.value })}
                   className="w-full border rounded-lg px-3 py-2"
                 >
+                  <option value="3x3">3 x 3</option>
                   <option value="4x4">4 x 4</option>
                   <option value="6x6">6 x 6</option>
                 </select>

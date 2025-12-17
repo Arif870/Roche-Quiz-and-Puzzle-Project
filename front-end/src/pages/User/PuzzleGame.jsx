@@ -62,9 +62,12 @@ const PuzzleGame = () => {
     if (storedPuzzle) {
       try {
         const parsed = JSON.parse(storedPuzzle);
+        // Hydrate immediately so late joiners start with an active shuffle
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         startPuzzleFromData(parsed);
-      // eslint-disable-next-line no-empty
-      } catch (e) {}
+      } catch (error) {
+        console.error('Failed to hydrate puzzle from storage', error);
+      }
     }
 
     if (socket) {
