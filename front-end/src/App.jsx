@@ -5,7 +5,8 @@ import UserLogin from './pages/User/UserLogin';
 import QuizGame from './pages/User/QuizGame';
 import PuzzleGame from './pages/User/PuzzleGame';
 import AdminDashboard from './pages/Admin/AdminDashboard';
-import AdminRoom from './pages/Admin/AdminRoom'; // Ensure this file exists!
+import AdminRoom from './pages/Admin/AdminRoom';
+import AdminLogin from './pages/Admin/AdminLogin';
 
 // Temporary "Home" component for easy navigation during development
 const Home = () => {
@@ -15,18 +16,18 @@ const Home = () => {
         <h1 className='text-5xl mb-4'>🚀</h1>
         <h1 className="text-3xl font-bold mb-6 text-gray-800">Roche Digital Engagement Project</h1>
         <p className="mb-8 text-gray-600">Select a panel to start testing:</p>
-        
+
         <div className="space-y-4">
-          <Link 
-            to="/admin" 
+          <Link
+            to="/admin"
             className="block w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
           >
             Go to Admin Dashboard
           </Link>
-          
+
           {/* Direct link to monitor a specific test room */}
-          <Link 
-            to="/admin/monitor/test-room-1" 
+          <Link
+            to="/admin/monitor/test-room-1"
             className="block w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
           >
              Admin: Monitor "Test Room 1"
@@ -38,8 +39,8 @@ const Home = () => {
             <div className="flex-grow border-t border-gray-300"></div>
           </div>
 
-          <Link 
-            to="/join/test-room-1" 
+          <Link
+            to="/join/test-room-1"
             className="block w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition"
           >
             Join "Test Room 1" (Mobile User)
@@ -63,6 +64,7 @@ function App() {
         <Route path="/play/puzzle" element={<PuzzleGame />} />
 
         {/* --- Admin Desktop Routes --- */}
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminDashboard />} />
         {/* The Monitor Page where Admin starts the game */}
         <Route path="/admin/monitor/:eventId" element={<AdminRoom />} />

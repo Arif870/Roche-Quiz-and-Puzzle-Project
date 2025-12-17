@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 
@@ -14,7 +14,7 @@ const PuzzleGame = () => {
   const [selectedTileIndex, setSelectedTileIndex] = useState(null);
   const [isFinished, setIsFinished] = useState(false);
   const [moves, setMoves] = useState(0);
-  const [startTime] = useState(() => Date.now());
+  const startTimeRef = useRef(0);
   const [finalScore, setFinalScore] = useState(null);
 
   const userDetails = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
@@ -22,6 +22,21 @@ const PuzzleGame = () => {
 
   // CONSTANTS FOR PIXEL MATH
   const CONTAINER_SIZE = 340; // Total size in pixels
+
+  const startNewGame = useCallback((size) => {
+    const total = size * size;
+    const solvedState = Array.from({ length: total }, (_, i) => i);
+    let shuffled = [...solvedState];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setTiles(shuffled);
+    setIsFinished(false);
+    setMoves(0);
+    setFinalScore(null);
+    startTimeRef.current = new Date().getTime();
+  }, []);
 
   useEffect(() => {
     if (!eventId || !userDetails.name) {
@@ -35,7 +50,7 @@ const PuzzleGame = () => {
 
       socket.on('puzzle_start', (data) => {
         setImageUrl(data.imageUrl);
-        setGridSize(data.gridSize); 
+        setGridSize(data.gridSize);
         startNewGame(data.gridSize);
       });
     }
@@ -43,21 +58,7 @@ const PuzzleGame = () => {
     return () => {
       if (socket) socket.off('puzzle_start');
     };
-  }, [socket, eventId, navigate]);
-
-  const startNewGame = (size) => {
-    const total = size * size;
-    const solvedState = Array.from({ length: total }, (_, i) => i);
-    let shuffled = [...solvedState];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    setTiles(shuffled);
-    setIsFinished(false);
-    setMoves(0);
-    setFinalScore(null);
-  };
+  }, [socket, eventId, navigate, userDetails, startNewGame]);
 
   const handleTileClick = (index) => {
     if (isFinished || !imageUrl) return;
@@ -90,7 +91,7 @@ const PuzzleGame = () => {
   };
 
   const finishGame = () => {
-    const timeTaken = (Date.now() - startTime) / 1000;
+    const timeTaken = (new Date().getTime() - startTimeRef.current) / 1000;
     setIsFinished(true);
     const baseScore = gridSize === 6 ? 20000 : gridSize === 4 ? 10000 : 5000;
     const calculatedScore = Math.max(0, baseScore - (moves * 50) - (Math.floor(timeTaken) * 10));
