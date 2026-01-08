@@ -16,12 +16,21 @@ const UserLogin = () => {
     // 1. LISTEN FOR QUIZ START
     socket.on('game_started', () => {
       console.log("Quiz Started!");
+      sessionStorage.removeItem('activePuzzle');
       navigate('/play/quiz');
     });
 
     // 2. LISTEN FOR PUZZLE START
-    socket.on('puzzle_start', () => {
+    socket.on('puzzle_start', (puzzleData) => {
       console.log("Puzzle Started!");
+      const size = parseInt(puzzleData?.gridSize, 10);
+      const gridSize = Number.isNaN(size) ? 3 : size;
+      if (puzzleData?.imageUrl) {
+        sessionStorage.setItem('activePuzzle', JSON.stringify({
+          imageUrl: puzzleData.imageUrl,
+          gridSize
+        }));
+      }
       navigate('/play/puzzle');
     });
 

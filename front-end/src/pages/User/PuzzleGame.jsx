@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 
@@ -14,7 +14,7 @@ const PuzzleGame = () => {
   const [selectedTileIndex, setSelectedTileIndex] = useState(null);
   const [isFinished, setIsFinished] = useState(false);
   const [moves, setMoves] = useState(0);
-  const [startTime] = useState(() => Date.now());
+  const startTimeRef = useRef(0);
   const [finalScore, setFinalScore] = useState(null);
 
   const userDetails = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
@@ -23,29 +23,7 @@ const PuzzleGame = () => {
   // CONSTANTS FOR PIXEL MATH
   const CONTAINER_SIZE = 340; // Total size in pixels
 
-  useEffect(() => {
-    if (!eventId || !userDetails.name) {
-      alert("Please login first!");
-      navigate('/');
-      return;
-    }
-
-    if (socket) {
-      socket.emit('join_room', { eventId, user: userDetails });
-
-      socket.on('puzzle_start', (data) => {
-        setImageUrl(data.imageUrl);
-        setGridSize(data.gridSize); 
-        startNewGame(data.gridSize);
-      });
-    }
-
-    return () => {
-      if (socket) socket.off('puzzle_start');
-    };
-  }, [socket, eventId, navigate]);
-
-  const startNewGame = (size) => {
+  const startNewGame = useCallback((size) => {
     const total = size * size;
     const solvedState = Array.from({ length: total }, (_, i) => i);
     let shuffled = [...solvedState];
@@ -57,7 +35,53 @@ const PuzzleGame = () => {
     setIsFinished(false);
     setMoves(0);
     setFinalScore(null);
-  };
+    startTimeRef.current = new Date().getTime();
+  }, []);
+
+  const startPuzzleFromData = useCallback((data) => {
+    if (!data?.imageUrl) return;
+    const parsedSize = parseInt(data.gridSize, 10);
+    const normalizedSize = Number.isNaN(parsedSize) ? 3 : parsedSize;
+    setImageUrl(data.imageUrl);
+    setGridSize(normalizedSize);
+    startNewGame(normalizedSize);
+    sessionStorage.setItem('activePuzzle', JSON.stringify({
+      imageUrl: data.imageUrl,
+      gridSize: normalizedSize
+    }));
+  }, [startNewGame]);
+
+  useEffect(() => {
+    if (!eventId || !userDetails.name) {
+      alert("Please login first!");
+      navigate('/');
+      return;
+    }
+
+    const storedPuzzle = sessionStorage.getItem('activePuzzle');
+    if (storedPuzzle) {
+      try {
+        const parsed = JSON.parse(storedPuzzle);
+        // Hydrate immediately so late joiners start with an active shuffle
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        startPuzzleFromData(parsed);
+      } catch (error) {
+        console.error('Failed to hydrate puzzle from storage', error);
+      }
+    }
+
+    if (socket) {
+      socket.emit('join_room', { eventId, user: userDetails });
+
+      socket.on('puzzle_start', (data) => {
+        startPuzzleFromData(data);
+      });
+    }
+
+    return () => {
+      if (socket) socket.off('puzzle_start');
+    };
+  }, [socket, eventId, navigate, userDetails, startPuzzleFromData]);
 
   const handleTileClick = (index) => {
     if (isFinished || !imageUrl) return;
@@ -90,7 +114,7 @@ const PuzzleGame = () => {
   };
 
   const finishGame = () => {
-    const timeTaken = (Date.now() - startTime) / 1000;
+    const timeTaken = (new Date().getTime() - startTimeRef.current) / 1000;
     setIsFinished(true);
     const baseScore = gridSize === 6 ? 20000 : gridSize === 4 ? 10000 : 5000;
     const calculatedScore = Math.max(0, baseScore - (moves * 50) - (Math.floor(timeTaken) * 10));

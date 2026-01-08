@@ -101,7 +101,7 @@ io.on('connection', (socket) => {
     socket.join(eventId);
 
     if (!gameRooms[eventId]) gameRooms[eventId] = { players: [], imageUrl: null, activeGame: 'lobby' };
-    
+
     if (user.type !== 'admin') {
       const existingPlayer = gameRooms[eventId].players.find(p => p.mobile === user.mobile);
       if (existingPlayer) {
@@ -112,13 +112,14 @@ io.on('connection', (socket) => {
         }
       } else {
         // New Player joins LOBBY (not active in game yet)
-        gameRooms[eventId].players.push({ 
-          ...user, 
-          socketId: socket.id, 
-          score: 0, 
+        gameRooms[eventId].players.push({
+          ...user,
+          socketId: socket.id,
+          score: 0,
           timeTaken: 0,
           finished: false,
-          activeIn: 'lobby' // Waiting state
+          // If a game is already live (quiz or puzzle), mark them active immediately
+          activeIn: gameRooms[eventId].activeGame || 'lobby' // Waiting state
         });
       }
     }
